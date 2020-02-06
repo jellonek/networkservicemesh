@@ -16,10 +16,12 @@ spec:
       serviceAccount: nse-acc
       containers:
         - name: icmp-responder-nse
-          image: {{ .Values.registry }}/{{ .Values.org }}/test-common:{{ .Values.tag}}
-          command: ["/bin/icmp-responder-nse"]
+          image: pskamruk/test-common:ownroute
+          command: ["/bin/icmp-responder-nse", "-routes"]
           imagePullPolicy: {{ .Values.pullPolicy }}
           env:
+            - name: ROUTE
+              value: "8.8.0.0/20"
             - name: ENDPOINT_NETWORK_SERVICE
               value: "icmp-responder"
             - name: ENDPOINT_LABELS

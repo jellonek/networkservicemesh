@@ -18,6 +18,7 @@ package main
 import (
 	"context"
 	"net"
+	"os"
 	"time"
 
 	connectionMonitor "github.com/networkservicemesh/networkservicemesh/sdk/monitor/connectionmonitor"
@@ -62,14 +63,19 @@ func main() {
 	ipamEndpoint := endpoint.NewIpamEndpoint(configuration)
 	endpoints = append(endpoints, ipamEndpoint)
 
-	routeAddr := endpoint.CreateRouteMutator([]string{"8.8.8.8/30"})
+	routes := []string{"8.8.8.8/30"}
+	routeAddr := os.Getenv("ROUTE")
+	if len(routeAddr) > 0 {
+		routes[0] = routeAddr
+	}
+	routeMutator := endpoint.CreateRouteMutator(routes)
 	prefixes := ipamEndpoint.PrefixPool.GetPrefixes()
 	if len(prefixes) > 0 && common.IsIPv6(prefixes[0]) {
-		routeAddr = endpoint.CreateRouteMutator([]string{"2001:4860:4860::8888/126"})
+		routeMutator = endpoint.CreateRouteMutator([]string{"2001:4860:4860::8888/126"})
 	}
 	if flags.Routes {
 		logrus.Infof("Adding routes endpoint to chain")
-		endpoints = append(endpoints, endpoint.NewCustomFuncEndpoint("route", routeAddr))
+		endpoints = append(endpoints, endpoint.NewCustomFuncEndpoint("route", routeMutator))
 	}
 
 	if flags.DNS {
